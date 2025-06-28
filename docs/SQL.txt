@@ -1,0 +1,179 @@
+CREATE TABLE users (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  first_name VARCHAR(255) NOT NULL,
+  last_activity TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_sessions (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  fingerprint_hash VARCHAR(64) NOT NULL,
+  jwt_token_hash VARCHAR(64) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  ip_address VARCHAR(45) NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE profile_details (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  age INT NULL,
+  gender VARCHAR(32) NULL,
+  interests TEXT NULL,
+  bio TEXT NULL,
+  profile_photo_url VARCHAR(255) NULL,
+  location VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE user_likes (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  from_user_id INT NOT NULL,
+  to_user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (from_user_id) REFERENCES users(id),
+  FOREIGN KEY (to_user_id) REFERENCES users(id),
+  UNIQUE KEY unique_like (from_user_id, to_user_id)
+);
+
+CREATE TABLE matches (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user1_id INT NOT NULL,
+  user2_id INT NOT NULL,
+  match_status ENUM('active', 'paused', 'ended') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user1_id) REFERENCES users(id),
+  FOREIGN KEY (user2_id) REFERENCES users(id),
+  UNIQUE KEY unique_match (user1_id, user2_id)
+);
+
+CREATE TABLE chat_conversations (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  match_id INT NOT NULL,
+  last_message_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (match_id) REFERENCES matches(id)
+);
+
+CREATE TABLE chat_messages (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  conversation_id INT NOT NULL,
+  sender_id INT NOT NULL,
+  message_text TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  message_type ENUM('user', 'agent_simulation') DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id),
+  FOREIGN KEY (sender_id) REFERENCES users(id)
+);
+
+CREATE TABLE user_agents (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  personality_data JSON NOT NULL, -- Данные о личности и поведении
+  learning_status ENUM('learning', 'ready', 'updating') DEFAULT 'learning',
+  last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  UNIQUE KEY unique_user_agent (user_id)
+);
+
+CREATE TABLE agent_learning_data (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  agent_id INT NOT NULL,
+  data_type ENUM('message_history', 'profile_interaction', 'preferences'),
+  data_content JSON NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (agent_id) REFERENCES user_agents(id)
+);
+
+CREATE TABLE agent_simulations (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  conversation_id INT NOT NULL,
+  agent1_id INT NOT NULL,
+  agent2_id INT NOT NULL,
+  simulation_status ENUM('pending', 'in_progress', 'completed', 'failed') DEFAULT 'pending',
+  compatibility_score DECIMAL(3,2) NULL, -- Оценка совместимости от 0 до 1
+  simulation_summary TEXT NULL,
+  started_at TIMESTAMP NULL,
+  completed_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id),
+  FOREIGN KEY (agent1_id) REFERENCES user_agents(id),
+  FOREIGN KEY (agent2_id) REFERENCES user_agents(id)
+);
+
+CREATE TABLE agent_simulation_messages (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  simulation_id INT NOT NULL,
+  sender_agent_id INT NOT NULL,
+  message_text TEXT NOT NULL,
+  sentiment_score DECIMAL(3,2) NULL, -- Оценка тональности сообщения
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (simulation_id) REFERENCES agent_simulations(id),
+  FOREIGN KEY (sender_agent_id) REFERENCES user_agents(id)
+);
+
+CREATE TABLE user_preferences (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  age_min INT NULL,
+  age_max INT NULL,
+  preferred_genders JSON NULL, -- ['male', 'female', 'non-binary', ...]
+  preferred_distance INT NULL, -- в километрах
+  other_preferences JSON NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  UNIQUE KEY unique_user_preferences (user_id)
+);
+
+CREATE TABLE user_conversation_feedback (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  conversation_id INT NOT NULL,
+  rating TINYINT NULL, -- Оценка от 1 до 5
+  feedback_text TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id),
+  UNIQUE KEY unique_conversation_feedback (user_id, conversation_id)
+);
+
+CREATE TABLE agent_simulation_feedback (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  simulation_id INT NOT NULL,
+  user_id INT NOT NULL,
+  accuracy_rating TINYINT NULL, -- Насколько точно агент отражает поведение
+  usefulness_rating TINYINT NULL, -- Насколько полезной была симуляция
+  feedback_text TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (simulation_id) REFERENCES agent_simulations(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Индексы для поиска и фильтрации пользователей
+CREATE INDEX idx_users_last_activity ON users(last_activity);
+CREATE INDEX idx_profile_details_gender ON profile_details(gender);
+CREATE INDEX idx_profile_details_age ON profile_details(age);
+CREATE INDEX idx_profile_details_location ON profile_details(location);
+
+-- Индексы для лайков и матчей
+CREATE INDEX idx_user_likes_to_user ON user_likes(to_user_id, created_at);
+CREATE INDEX idx_matches_users ON matches(user1_id, user2_id, match_status);
+
+-- Индексы для чатов и сообщений
+CREATE INDEX idx_chat_messages_conversation ON chat_messages(conversation_id, created_at);
+CREATE INDEX idx_chat_conversations_last_message ON chat_conversations(last_message_at);
+
+-- Индексы для агентов и симуляций
+CREATE INDEX idx_agent_simulations_status ON agent_simulations(simulation_status, created_at);
+CREATE INDEX idx_agent_simulation_messages_simulation ON agent_simulation_messages(simulation_id, created_at);

@@ -1,0 +1,156 @@
+users [icon: user, color: blue] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  email VARCHAR(255) NOT NULL
+  password VARCHAR(255) NOT NULL
+  first_name VARCHAR(255) NOT NULL
+  last_activity TIMESTAMP NOT NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+
+user_sessions [icon: key, color: green] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user_id INT NOT NULL
+  fingerprint_hash VARCHAR(64) NOT NULL
+  jwt_token_hash VARCHAR(64) UNIQUE NOT NULL
+  expires_at TIMESTAMP NOT NULL
+  ip_address VARCHAR(45) NULL
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+user_sessions.user_id > users.id
+
+profile_details [icon: user-check, color: orange] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user_id INT NOT NULL
+  age INT NULL
+  gender VARCHAR(32) NULL
+  interests TEXT NULL
+  bio TEXT NULL
+  profile_photo_url VARCHAR(255) NULL
+  location VARCHAR(255) NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+profile_details.user_id > users.id
+
+user_likes [icon: heart, color: red] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  from_user_id INT NOT NULL
+  to_user_id INT NOT NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+user_likes.from_user_id > users.id
+user_likes.to_user_id > users.id
+
+matches [icon: star, color: yellow] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user1_id INT NOT NULL
+  user2_id INT NOT NULL
+  match_status ENUM('active', 'paused', 'ended') DEFAULT 'active'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+matches.user1_id > users.id
+matches.user2_id > users.id
+
+chat_conversations [icon: message-circle, color: purple] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  match_id INT NOT NULL
+  last_message_at TIMESTAMP NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+chat_conversations.match_id > matches.id
+
+chat_messages [icon: message-square, color: indigo] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  conversation_id INT NOT NULL
+  sender_id INT NOT NULL
+  message_text TEXT NOT NULL
+  is_read BOOLEAN DEFAULT FALSE
+  message_type ENUM('user', 'agent_simulation') DEFAULT 'user'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+chat_messages.conversation_id > chat_conversations.id
+chat_messages.sender_id > users.id
+
+user_agents [icon: cpu, color: teal] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user_id INT NOT NULL
+  personality_data JSON NOT NULL
+  learning_status ENUM('learning', 'ready', 'updating') DEFAULT 'learning'
+  last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+user_agents.user_id > users.id
+
+agent_learning_data [icon: database, color: navy] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  agent_id INT NOT NULL
+  data_type ENUM('message_history', 'profile_interaction', 'preferences')
+  data_content JSON NOT NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+agent_learning_data.agent_id > user_agents.id
+
+agent_simulations [icon: play, color: cyan] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  conversation_id INT NOT NULL
+  agent1_id INT NOT NULL
+  agent2_id INT NOT NULL
+  simulation_status ENUM('pending', 'in_progress', 'completed', 'failed') DEFAULT 'pending'
+  compatibility_score DECIMAL(3,2) NULL
+  simulation_summary TEXT NULL
+  started_at TIMESTAMP NULL
+  completed_at TIMESTAMP NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+agent_simulations.conversation_id > chat_conversations.id
+agent_simulations.agent1_id > user_agents.id
+agent_simulations.agent2_id > user_agents.id
+
+agent_simulation_messages [icon: message, color: blue-gray] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  simulation_id INT NOT NULL
+  sender_agent_id INT NOT NULL
+  message_text TEXT NOT NULL
+  sentiment_score DECIMAL(3,2) NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+agent_simulation_messages.simulation_id > agent_simulations.id
+agent_simulation_messages.sender_agent_id > user_agents.id
+
+user_preferences [icon: settings, color: pink] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user_id INT NOT NULL
+  age_min INT NULL
+  age_max INT NULL
+  preferred_genders JSON NULL
+  preferred_distance INT NULL
+  other_preferences JSON NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+user_preferences.user_id > users.id
+
+user_conversation_feedback [icon: thumbs-up, color: lime] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  user_id INT NOT NULL
+  conversation_id INT NOT NULL
+  rating TINYINT NULL
+  feedback_text TEXT NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+user_conversation_feedback.user_id > users.id
+user_conversation_feedback.conversation_id > chat_conversations.id
+
+agent_simulation_feedback [icon: check-circle, color: amber] {
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+  simulation_id INT NOT NULL
+  user_id INT NOT NULL
+  accuracy_rating TINYINT NULL
+  usefulness_rating TINYINT NULL
+  feedback_text TEXT NULL
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+}
+agent_simulation_feedback.simulation_id > agent_simulations.id
+agent_simulation_feedback.user_id > users.id
