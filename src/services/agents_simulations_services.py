@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 from fastapi import HTTPException, status
 from src.repository import agents_simulations_repository
-from src.database.models import AgentsSimulations, SimulationStatusEnum
+from src.database.models import AgentSimulations, SimulationStatusEnum
 from src.utils.custom_logging import get_logger
 
 log = get_logger(__name__)
@@ -25,13 +25,13 @@ class SimulationValidationError(HTTPException):
         )
 
 
-def get_all_simulations() -> List[AgentsSimulations]:
+def get_all_simulations() -> List[AgentSimulations]:
     """Получить все симуляции агентов"""
     simulations_data = agents_simulations_repository.get_all_simulations()
     return [_convert_db_simulation(sim) for sim in simulations_data]
 
 
-def get_simulation_by_id(simulation_id: int) -> AgentsSimulations:
+def get_simulation_by_id(simulation_id: int) -> AgentSimulations:
     """Получить симуляцию по ID"""
     simulation_data = agents_simulations_repository.get_simulation_by_id(simulation_id)
     if not simulation_data:
@@ -39,13 +39,13 @@ def get_simulation_by_id(simulation_id: int) -> AgentsSimulations:
     return _convert_db_simulation(simulation_data)
 
 
-def get_simulations_by_agent(agent_id: int) -> List[AgentsSimulations]:
+def get_simulations_by_agent(agent_id: int) -> List[AgentSimulations]:
     """Получить все симуляции конкретного агента"""
     simulations_data = agents_simulations_repository.get_simulations_by_agent(agent_id)
     return [_convert_db_simulation(sim) for sim in simulations_data]
 
 
-def get_simulations_by_conversation(conversation_id: int) -> List[AgentsSimulations]:
+def get_simulations_by_conversation(conversation_id: int) -> List[AgentSimulations]:
     """Получить все симуляции для конкретной беседы"""
     simulations_data = agents_simulations_repository.get_simulations_by_conversation(conversation_id)
     return [_convert_db_simulation(sim) for sim in simulations_data]
@@ -55,7 +55,7 @@ def create_simulation(
     agent_id: int,
     conversation_id: int,
     simulation_data: Optional[Dict[str, Any]] = None
-) -> AgentsSimulations:
+) -> AgentSimulations:
     """Создать новую симуляцию агента"""
     from src.services import user_agents_services, chat_conversations_services
     
@@ -63,7 +63,7 @@ def create_simulation(
     user_agents_services.get_agent_by_id(agent_id)
     chat_conversations_services.get_conversation_by_id(conversation_id)
     
-    simulation = AgentsSimulations(
+    simulation = AgentSimulations(
         AgentID=agent_id,
         ConversationID=conversation_id,
         SimulationStatus=SimulationStatusEnum.PENDING,
@@ -75,7 +75,7 @@ def create_simulation(
     return get_simulation_by_id(simulation_id)
 
 
-def update_simulation(simulation_id: int, updates: Dict[str, Any]) -> AgentsSimulations:
+def update_simulation(simulation_id: int, updates: Dict[str, Any]) -> AgentSimulations:
     """Обновить симуляцию агента"""
     existing = get_simulation_by_id(simulation_id)
     
@@ -102,7 +102,7 @@ def update_simulation(simulation_id: int, updates: Dict[str, Any]) -> AgentsSimu
     return get_simulation_by_id(simulation_id)
 
 
-def start_simulation(simulation_id: int) -> AgentsSimulations:
+def start_simulation(simulation_id: int) -> AgentSimulations:
     """Начать симуляцию (изменить статус на 'in_progress')"""
     return update_simulation(
         simulation_id,
@@ -116,7 +116,7 @@ def start_simulation(simulation_id: int) -> AgentsSimulations:
 def complete_simulation(
     simulation_id: int,
     simulation_data: Optional[Dict[str, Any]] = None
-) -> AgentsSimulations:
+) -> AgentSimulations:
     """Завершить симуляцию успешно"""
     updates = {
         'SimulationStatus': SimulationStatusEnum.COMPLETED,
@@ -133,7 +133,7 @@ def fail_simulation(
     simulation_id: int,
     error_message: str,
     error_details: Optional[Dict[str, Any]] = None
-) -> AgentsSimulations:
+) -> AgentSimulations:
     """Завершить симуляцию с ошибкой"""
     simulation = get_simulation_by_id(simulation_id)
     
@@ -168,25 +168,25 @@ def delete_simulation(simulation_id: int) -> Dict[str, str]:
     return {"message": f"Simulation {simulation_id} deleted successfully"}
 
 
-def get_active_simulations() -> List[AgentsSimulations]:
+def get_active_simulations() -> List[AgentSimulations]:
     """Получить все активные симуляции агентов"""
     simulations_data = agents_simulations_repository.get_active_simulations()
     return [_convert_db_simulation(sim) for sim in simulations_data]
 
 
-def get_completed_simulations(limit: int = 100) -> List[AgentsSimulations]:
+def get_completed_simulations(limit: int = 100) -> List[AgentSimulations]:
     """Получить завершенные симуляции агентов"""
     simulations_data = agents_simulations_repository.get_completed_simulations(limit)
     return [_convert_db_simulation(sim) for sim in simulations_data]
 
 
-def get_failed_simulations(limit: int = 100) -> List[AgentsSimulations]:
+def get_failed_simulations(limit: int = 100) -> List[AgentSimulations]:
     """Получить неудачные симуляции агентов"""
     simulations_data = agents_simulations_repository.get_failed_simulations(limit)
     return [_convert_db_simulation(sim) for sim in simulations_data]
 
 
-def get_recent_simulations(hours: int = 24) -> List[AgentsSimulations]:
+def get_recent_simulations(hours: int = 24) -> List[AgentSimulations]:
     """Получить недавние симуляции за указанное количество часов"""
     simulations_data = agents_simulations_repository.get_recent_simulations(hours)
     return [_convert_db_simulation(sim) for sim in simulations_data]
@@ -206,7 +206,7 @@ def run_agent_simulation(
     agent_id: int,
     conversation_id: int,
     simulation_data: Optional[Dict[str, Any]] = None
-) -> AgentsSimulations:
+) -> AgentSimulations:
     """
     Запустить новую симуляцию агента и автоматически начать ее
     """
@@ -214,7 +214,7 @@ def run_agent_simulation(
     return start_simulation(simulation.ID)
 
 
-def _convert_db_simulation(simulation_data: Dict[str, Any]) -> AgentsSimulations:
+def _convert_db_simulation(simulation_data: Dict[str, Any]) -> AgentSimulations:
     """Конвертировать данные из БД в Pydantic модель"""
     simulation_data_json = (
         json.loads(simulation_data['simulation_data'])
@@ -222,7 +222,7 @@ def _convert_db_simulation(simulation_data: Dict[str, Any]) -> AgentsSimulations
         else simulation_data.get('simulation_data')
     )
     
-    return AgentsSimulations(
+    return AgentSimulations(
         ID=simulation_data['id'],
         AgentID=simulation_data['agent_id'],
         ConversationID=simulation_data['conversation_id'],

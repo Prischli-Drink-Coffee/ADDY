@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 import json
 from src.database.my_connector import db
-from src.database.models import AgentsSimulations
+from src.database.models import AgentSimulations
 
 
 def get_all_simulations() -> List[Dict[str, Any]]:
@@ -43,7 +43,7 @@ def get_simulations_by_conversation(conversation_id: int) -> List[Dict[str, Any]
     return db.fetch_all(query, (conversation_id,))
 
 
-def create_simulation(simulation: AgentsSimulations) -> int:
+def create_simulation(simulation: AgentSimulations) -> int:
     """Создать новую симуляцию агента"""
     # Сериализуем JSON поле с данными симуляции
     simulation_data = json.dumps(simulation.SimulationData) if simulation.SimulationData else None

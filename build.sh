@@ -1,21 +1,19 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${PROJECT_ROOT}/.env"
+source ./src/scripts/check_env.sh
 
-echo "--- Building FrameReader Backend ---"
+echo "--- Building ADDY Backend ---"
 
-echo "Running db.sh to initialize database..."
-if [ -f "$PROJECT_ROOT/db.sh" ]; then
-    bash "$PROJECT_ROOT/db.sh"
-    echo "db.sh executed successfully."
-else
-    echo "Warning: db.sh not found at $PROJECT_ROOT/db.sh. Skipping database initialization."
+if [ -f "${PROJECT_ROOT}/db.sh" ]; then
+    echo "Initializing database..."
+    bash "${PROJECT_ROOT}/db.sh"
 fi
 
-echo "Building Docker image for backend..."
-docker build -t framereader-backend:latest -f "$PROJECT_ROOT/docker/Dockerfile" "$PROJECT_ROOT"
+echo "Building Docker image..."
+docker build -t addy-backend:latest -f "${PROJECT_ROOT}/docker/Dockerfile" "$PROJECT_ROOT"
 
-echo "Docker image framereader-backend:latest built successfully."
 echo "--- Build Complete ---"
