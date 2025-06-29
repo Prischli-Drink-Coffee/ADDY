@@ -45,12 +45,13 @@ def create_user(email: str, password: str, first_name: str) -> Users:
             detail='User with this email already exists'
         )
 
+    # Исправлено: используем строчные буквы для полей Pydantic модели
     user = Users(
-        Email=email,
-        Password=password,
-        FirstName=first_name,
-        LastActivity=datetime.now(),
-        CreatedAt=datetime.now()
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_activity=datetime.now(),
+        created_at=datetime.now()
     )
 
     user_id = user_repository.create_user(user)
@@ -59,7 +60,7 @@ def create_user(email: str, password: str, first_name: str) -> Users:
 
 def update_user(user_id: int, updates: Dict[str, Any]) -> Users:
     """Обновить данные пользователя"""
-    existing_user = get_user_by_id(user_id)
+    get_user_by_id(user_id)
     
     # Подготовка данных для обновления
     update_data = {}
@@ -102,7 +103,8 @@ def authenticate_user(email: str, password: str) -> Optional[Users]:
         return None
     
     user = Users(**user_data)
-    if user.Password != password:  # На практике должно быть сравнение хэшей
+    # Используем заглавные буквы, как определено в модели
+    if user.Password != password:  # Используем Password, а не password
         return None
     return user
 

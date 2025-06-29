@@ -57,18 +57,19 @@ def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails
         pass
     
     # Валидация данных
-    if 'Age' in profile_data and profile_data['Age'] is not None:
-        if not (18 <= profile_data['Age'] <= 120):
-            raise ProfileValidationError("Age must be between 18 and 120")
+    age = profile_data.get('age')
+    if age is not None and not (18 <= age <= 120):
+        raise ProfileValidationError("Age must be between 18 and 120")
     
+    # Создаем объект ProfileDetails с заглавными буквами
     profile = ProfileDetails(
         UserID=user_id,
-        Age=profile_data.get('Age'),
-        Gender=profile_data.get('Gender'),
-        Interests=profile_data.get('Interests'),
-        Bio=profile_data.get('Bio'),
-        ProfilePhotoUrl=profile_data.get('ProfilePhotoUrl'),
-        Location=profile_data.get('Location'),
+        Age=profile_data.get('age'),
+        Gender=profile_data.get('gender'),
+        Interests=profile_data.get('interests'),
+        Bio=profile_data.get('bio'),
+        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
+        Location=profile_data.get('location'),
         CreatedAt=datetime.now(),
         UpdatedAt=datetime.now()
     )
@@ -202,14 +203,14 @@ def get_profile_recommendations(user_id: int, limit: int = 10) -> List[Dict[str,
 def _convert_db_profile(profile_data: Dict[str, Any]) -> ProfileDetails:
     """Конвертировать данные из БД в Pydantic модель"""
     return ProfileDetails(
-        ID=profile_data['id'],
-        UserID=profile_data['user_id'],
-        Age=profile_data['age'],
-        Gender=profile_data['gender'],
-        Interests=profile_data['interests'],
-        Bio=profile_data['bio'],
-        ProfilePhotoUrl=profile_data['profile_photo_url'],
-        Location=profile_data['location'],
-        CreatedAt=profile_data['created_at'],
-        UpdatedAt=profile_data['updated_at']
+        ID=profile_data.get('id'),
+        UserID=profile_data.get('user_id'),
+        Age=profile_data.get('age'),
+        Gender=profile_data.get('gender'),
+        Interests=profile_data.get('interests'),
+        Bio=profile_data.get('bio'),
+        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
+        Location=profile_data.get('location'),
+        CreatedAt=profile_data.get('created_at'),
+        UpdatedAt=profile_data.get('updated_at')
     )

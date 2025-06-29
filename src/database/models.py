@@ -79,9 +79,9 @@ class UserSessions(BaseModel):
     IPAddress: Optional[StrictStr] = Field(None, 
                                           alias="ip_address", 
                                           examples=["192.168.1.1"])
-    IsActive: StrictBool = Field(default=True, 
+    IsActive: StrictInt = Field(default=1, 
                                 alias="is_active", 
-                                examples=[True])
+                                examples=[1])
     CreatedAt: Optional[datetime] = Field(None, 
                                         alias="created_at", 
                                         examples=[f"{datetime.now()}"])

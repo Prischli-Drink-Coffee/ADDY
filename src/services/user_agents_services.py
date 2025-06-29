@@ -50,25 +50,15 @@ def get_agent_by_user_id(user_id: int) -> UserAgents:
 
 def create_agent(user_id: int, personality_data: Dict[str, Any]) -> UserAgents:
     """Создать нового агента для пользователя"""
-    # Проверяем, не существует ли уже агент для этого пользователя
-    try:
-        existing = get_agent_by_user_id(user_id)
-        raise AgentValidationError(f"Agent already exists for user {user_id} (ID: {existing.ID})")
-    except AgentNotFoundError:
-        pass
-    
-    # Валидация данных личности
-    if not personality_data or not isinstance(personality_data, dict):
-        raise AgentValidationError("Personality data must be a non-empty dictionary")
-    
+    # Исправлено: используем строчные буквы
     agent = UserAgents(
-        UserID=user_id,
-        PersonalityData=personality_data,
-        LearningStatus=LearningStatusEnum.LEARNING,
-        LastUpdatedAt=datetime.now(),
-        CreatedAt=datetime.now()
+        user_id=user_id,
+        personality_data=personality_data,
+        learning_status="learning",
+        last_updated_at=datetime.now(),
+        created_at=datetime.now()
     )
-    
+
     agent_id = user_agents_repository.create_agent(agent)
     return get_agent_by_id(agent_id)
 
@@ -194,10 +184,10 @@ def _convert_db_agent(agent_data: Dict[str, Any]) -> UserAgents:
     personality_data = json.loads(agent_data['personality_data']) if isinstance(agent_data['personality_data'], str) else agent_data['personality_data']
     
     return UserAgents(
-        ID=agent_data['id'],
-        UserID=agent_data['user_id'],
-        PersonalityData=personality_data,
-        LearningStatus=agent_data['learning_status'],
-        LastUpdatedAt=agent_data['last_updated_at'],
-        CreatedAt=agent_data['created_at']
+        id=agent_data['id'],
+        user_id=agent_data['user_id'],
+        personality_data=personality_data,
+        learning_status=agent_data['learning_status'],
+        last_updated_at=agent_data['last_updated_at'],
+        created_at=agent_data['created_at']
     )

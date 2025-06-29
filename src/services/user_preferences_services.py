@@ -47,18 +47,18 @@ def create_preferences(user_id: int, preferences: UserPreferences) -> UserPrefer
     try:
         existing = get_preferences_by_user(user_id)
         raise PreferencesValidationError(
-            f"User {user_id} already has preferences (ID: {existing.ID})"
+            f"User {user_id} already has preferences (ID: {existing.id})"
         )
     except PreferencesNotFoundError:
         pass
     
     # Валидация данных
-    if preferences.AgeMin and preferences.AgeMax and preferences.AgeMin > preferences.AgeMax:
+    if preferences.age_min and preferences.age_max and preferences.age_min > preferences.age_max:
         raise PreferencesValidationError(
             "Minimum age cannot be greater than maximum age"
         )
     
-    if preferences.PreferredDistance and preferences.PreferredDistance < 0:
+    if preferences.preferred_distance and preferences.preferred_distance < 0:
         raise PreferencesValidationError(
             "Preferred distance cannot be negative"
         )
@@ -76,12 +76,12 @@ def update_preferences(user_id: int, updates: Dict[str, Any]) -> UserPreferences
     except PreferencesNotFoundError:
         # Если предпочтений нет - создаем новые
         new_pref = UserPreferences(
-            UserID=user_id,
-            AgeMin=updates.get('AgeMin'),
-            AgeMax=updates.get('AgeMax'),
-            PreferredGenders=updates.get('PreferredGenders'),
-            PreferredDistance=updates.get('PreferredDistance'),
-            OtherPreferences=updates.get('OtherPreferences')
+            user_id=user_id,  # исправлено: строчные буквы
+            age_min=updates.get('AgeMin'),
+            age_max=updates.get('AgeMax'),
+            preferred_genders=updates.get('PreferredGenders'),
+            preferred_distance=updates.get('PreferredDistance'),
+            other_preferences=updates.get('OtherPreferences')
         )
         return create_preferences(user_id, new_pref)
     
@@ -92,12 +92,12 @@ def update_preferences(user_id: int, updates: Dict[str, Any]) -> UserPreferences
                 "Minimum age cannot be greater than maximum age"
             )
     elif 'AgeMin' in updates:
-        if updates['AgeMin'] > current_pref.AgeMax:
+        if updates['AgeMin'] > current_pref.age_max:  # исправлено: строчные буквы
             raise PreferencesValidationError(
                 "Minimum age cannot be greater than current maximum age"
             )
     elif 'AgeMax' in updates:
-        if updates['AgeMax'] < current_pref.AgeMin:
+        if updates['AgeMax'] < current_pref.age_min:  # исправлено: строчные буквы
             raise PreferencesValidationError(
                 "Maximum age cannot be less than current minimum age"
             )
@@ -120,7 +120,7 @@ def update_preferences(user_id: int, updates: Dict[str, Any]) -> UserPreferences
     update_data = {k: v for k, v in update_data.items() if v is not None}
     
     if update_data:
-        user_preferences_repository.update_preference(current_pref.ID, update_data)
+        user_preferences_repository.update_preference(current_pref.id, update_data)  # исправлено: строчные буквы
     
     return get_preferences_by_user(user_id)
 

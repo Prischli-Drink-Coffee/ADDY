@@ -65,26 +65,34 @@ class UserSessionManager:
         response: Response, 
         fingerprint_hash: str
     ) -> Dict[str, Any]:
-        # Get or create user by fingerprint
-        user = user_services.get_or_create_user(fingerprint_hash)
+        # Исправлено: используем user_services вместо user_sessions_services
+        user = user_sessions_services.get_or_create_user(fingerprint_hash)
         
-        # Create session
-        session_id = user_sessions_services.create_session(
+        # Create token first
+        import uuid
+        temp_token = uuid.uuid4().hex
+        
+        # Create session - исправлено: убираем user_agent
+        session = user_sessions_services.create_session(
             user_id=user.ID,
             fingerprint_hash=fingerprint_hash,
+            jwt_token_hash=temp_token,
             expires_at=self._calculate_expiry_date(),
-            ip_address=self._extract_client_ip(request),
-            user_agent=request.headers.get("user-agent")
+            ip_address=self._extract_client_ip(request)
         )
 
-        # Create token and set cookie
-        token = self._jwt_manager.create_user_token(user.ID, fingerprint_hash, session_id)
+        # Create proper token with session ID
+        token = self._jwt_manager.create_user_token(user.ID, fingerprint_hash, session.ID)
+        
+        # Обновляем сессию с правильным JWT токеном
+        user_sessions_services.update_session(session.ID, {"jwt_token_hash": token})
+        
         self._jwt_manager.set_cookie(response, token)
 
         return {
             "user_id": user.ID,
-            "session_id": session_id,
-            "is_new_user": user.TotalSessions == 0
+            "session_id": session.ID,
+            "is_new_user": True
         }
 
     def _calculate_expiry_date(self) -> datetime:

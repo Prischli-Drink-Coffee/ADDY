@@ -24,6 +24,16 @@ def get_sessions_by_user(user_id: int) -> List[Dict[str, Any]]:
     query = "SELECT * FROM user_sessions WHERE user_id = %s ORDER BY created_at DESC"
     return db.fetch_all(query, (user_id,))
 
+def get_sessions_by_fingerprint(fingerprint_hash: str) -> List[Dict[str, Any]]:
+    """Получить сессии по отпечатку браузера"""
+    query = """
+        SELECT * FROM user_sessions 
+        WHERE fingerprint_hash = %s 
+        AND is_active = 1 
+        ORDER BY created_at DESC
+    """
+    return db.fetch_all(query, (fingerprint_hash,))
+
 def create_session(session: UserSessions) -> int:
     query = """
         INSERT INTO user_sessions (user_id, jwt_token_hash, fingerprint_hash, expires_at, ip_address, is_active)
@@ -65,11 +75,11 @@ def update_session(session_id: int, updates: Dict[str, Any]) -> None:
     db.execute_query(query, params)
 
 def deactivate_session(session_id: int) -> None:
-    query = "UPDATE user_sessions SET is_active = FALSE WHERE id = %s"
+    query = "UPDATE user_sessions SET is_active = 0 WHERE id = %s"
     db.execute_query(query, (session_id,))
 
 def deactivate_user_sessions(user_id: int) -> None:
-    query = "UPDATE user_sessions SET is_active = FALSE WHERE user_id = %s"
+    query = "UPDATE user_sessions SET is_active = 0 WHERE user_id = %s"
     db.execute_query(query, (user_id,))
 
 def delete_session(session_id: int) -> None:
@@ -86,6 +96,6 @@ def get_sessions_by_ip(ip_address: str) -> List[Dict[str, Any]]:
     return db.fetch_all(query, (ip_address,))
 
 def count_active_sessions_by_user(user_id: int) -> int:
-    query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()"
+    query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_id = %s AND is_active = 1 AND expires_at > NOW()"
     result = db.fetch_one(query, (user_id,))
     return result["count"] if result else 0

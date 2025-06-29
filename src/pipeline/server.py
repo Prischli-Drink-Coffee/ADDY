@@ -2138,40 +2138,31 @@ async def delete_like_between_users(from_user_id: int, to_user_id: int):
 
 @app_server.post("/user-preferences/", 
                  response_model=UserPreferences, 
-                 tags=["Preference"],
+                 tags=["User Preferences"],
                  status_code=status.HTTP_201_CREATED)
 async def create_user_preferences(
-    user_id: int = Form(...),
+    user_id: int = Form(..., description="ID пользователя"),
     age_min: Optional[int] = Form(None, ge=18, le=100, description="Минимальный возраст"),
     age_max: Optional[int] = Form(None, ge=18, le=100, description="Максимальный возраст"),
     preferred_genders: Optional[str] = Form(None, description="Предпочитаемые полы через запятую"),
     preferred_distance: Optional[int] = Form(None, ge=0, description="Предпочитаемое расстояние в км"),
-    other_preferences: Optional[str] = Form(None, description="Другие предпочтения в формате JSON")
+    other_preferences: Optional[str] = Form(None, description="Другие предпочтения")
 ):
-    """Создать новые предпочтения для пользователя"""
-    # Обработка предпочитаемых полов
-    preferred_genders_list = None
+    """Создать предпочтения пользователя"""
+    # Преобразуем строку полов в список
+    genders_list = None
     if preferred_genders:
-        preferred_genders_list = [gender.strip() for gender in preferred_genders.split(',') if gender.strip()]
-    
-    # Обработка других предпочтений
-    other_preferences_dict = None
-    if other_preferences:
-        try:
-            other_preferences_dict = json.loads(other_preferences)
-        except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверный формат JSON для других предпочтений"
-            )
+        genders_list = [gender.strip() for gender in preferred_genders.split(',')]
     
     preferences = UserPreferences(
-        UserID=user_id,
-        AgeMin=age_min,
-        AgeMax=age_max,
-        PreferredGenders=preferred_genders_list,
-        PreferredDistance=preferred_distance,
-        OtherPreferences=other_preferences_dict
+        user_id=user_id,
+        age_min=age_min,
+        age_max=age_max,
+        preferred_genders=genders_list,  # Передаем как список
+        preferred_distance=preferred_distance,
+        other_preferences=other_preferences,
+        created_at=datetime.now(),
+        updated_at=datetime.now()
     )
     
     return user_preferences_services.create_preferences(user_id, preferences)

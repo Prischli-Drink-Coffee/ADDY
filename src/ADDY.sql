@@ -233,8 +233,8 @@ CREATE TABLE `user_preferences` (
 CREATE TABLE `user_sessions` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `fingerprint_hash` varchar(64) NOT NULL,
-  `jwt_token_hash` varchar(64) NOT NULL,
+  `fingerprint_hash` varchar(255) NOT NULL,
+  `jwt_token_hash` varchar(255) NOT NULL,
   `expires_at` timestamp NOT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',

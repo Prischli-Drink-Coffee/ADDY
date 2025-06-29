@@ -48,21 +48,19 @@ def check_match_exists(user1_id: int, user2_id: int) -> Optional[Matches]:
 def create_match(user1_id: int, user2_id: int) -> Matches:
     """Создать новый матч между пользователями"""
     if user1_id == user2_id:
-        raise MatchValidationError("Users cannot match with themselves")
+        raise MatchValidationError("Cannot create match with the same user")
     
-    # Проверяем, существует ли уже матч между этими пользователями
-    existing = check_match_exists(user1_id, user2_id)
-    if existing:
-        if existing.MatchStatus != MatchStatusEnum.ACTIVE:
-            return update_match_status(existing.ID, MatchStatusEnum.ACTIVE)
-        raise MatchValidationError(f"Match already exists between users {user1_id} and {user2_id}")
+    # Проверяем, что матч еще не существует
+    existing_match = matches_repository.get_match_by_users(user1_id, user2_id)
+    if existing_match:
+        raise MatchValidationError("Match between these users already exists")
     
+    # Исправлено: используем строчные буквы и правильные значения enum
     match = Matches(
-        User1ID=user1_id,
-        User2ID=user2_id,
-        MatchStatus=MatchStatusEnum.ACTIVE,
-        CreatedAt=datetime.now(),
-        UpdatedAt=datetime.now()
+        user1_id=user1_id,
+        user2_id=user2_id,
+        match_status="active",  # Изменено с "ACTIVE" на "active"
+        created_at=datetime.now()
     )
     
     match_id = matches_repository.create_match(match)
@@ -75,11 +73,14 @@ def update_match(match_id: int, updates: Dict[str, Any]) -> Matches:
     
     # Валидация обновлений
     if 'MatchStatus' in updates:
-        if updates['MatchStatus'] not in MatchStatusEnum.__members__.values():
-            raise MatchValidationError(f"Invalid status. Must be one of: {list(MatchStatusEnum.__members__.values())}")
+        # Приводим к нижнему регистру для проверки
+        status_lower = updates['MatchStatus'].lower() if isinstance(updates['MatchStatus'], str) else str(updates['MatchStatus']).lower()
+        valid_statuses = ['active', 'paused', 'ended']
+        if status_lower not in valid_statuses:
+            raise MatchValidationError(f"Invalid status. Must be one of: {valid_statuses}")
     
     update_data = {
-        'match_status': updates.get('MatchStatus')
+        'match_status': updates.get('MatchStatus', '').lower() if updates.get('MatchStatus') else None
     }
     
     # Удаляем None значения
@@ -93,7 +94,9 @@ def update_match(match_id: int, updates: Dict[str, Any]) -> Matches:
 
 def update_match_status(match_id: int, status: MatchStatusEnum) -> Matches:
     """Обновить статус матча"""
-    return update_match(match_id, {'MatchStatus': status})
+    # Преобразуем enum в строку в нижнем регистре
+    status_str = status.value.lower() if hasattr(status, 'value') else str(status).lower()
+    return update_match(match_id, {'MatchStatus': status_str})
 
 
 def delete_match(match_id: int) -> Dict[str, str]:
@@ -105,22 +108,23 @@ def delete_match(match_id: int) -> Dict[str, str]:
 
 def get_user_matches(user_id: int, status: MatchStatusEnum = None) -> List[Dict[str, Any]]:
     """Получить все матчи пользователя с возможностью фильтрации по статусу"""
-    return matches_repository.get_user_matches(user_id, status)
+    status_str = status.value.lower() if status and hasattr(status, 'value') else None
+    return matches_repository.get_user_matches(user_id, status_str)
 
 
 def get_active_matches(user_id: int) -> List[Dict[str, Any]]:
     """Получить активные матчи пользователя"""
-    return get_user_matches(user_id, MatchStatusEnum.ACTIVE)
+    return matches_repository.get_user_matches(user_id, 'active')
 
 
 def get_paused_matches(user_id: int) -> List[Dict[str, Any]]:
     """Получить приостановленные матчи пользователя"""
-    return get_user_matches(user_id, MatchStatusEnum.PAUSED)
+    return matches_repository.get_user_matches(user_id, 'paused')
 
 
 def get_ended_matches(user_id: int) -> List[Dict[str, Any]]:
     """Получить завершенные матчи пользователя"""
-    return get_user_matches(user_id, MatchStatusEnum.ENDED)
+    return matches_repository.get_user_matches(user_id, 'ended')
 
 
 def create_match_from_likes(from_user_id: int, to_user_id: int) -> Optional[Matches]:
@@ -175,7 +179,7 @@ def end_inactive_matches(days_inactive: int = 30) -> Dict[str, Any]:
     
     for match in inactive_matches:
         try:
-            update_match_status(match['id'], MatchStatusEnum.ENDED)
+            update_match_status(match['id'], 'ended')
             ended_count += 1
         except Exception as e:
             log.error(f"Failed to end match {match['id']}: {str(e)}")
@@ -188,11 +192,12 @@ def end_inactive_matches(days_inactive: int = 30) -> Dict[str, Any]:
 
 def _convert_db_match(match_data: Dict[str, Any]) -> Matches:
     """Конвертировать данные из БД в Pydantic модель"""
+    # Исправлено: используем строчные буквы для полей Pydantic модели
     return Matches(
-        ID=match_data['id'],
-        User1ID=match_data['user1_id'],
-        User2ID=match_data['user2_id'],
-        MatchStatus=match_data['match_status'],
-        CreatedAt=match_data['created_at'],
-        UpdatedAt=match_data['updated_at']
+        id=match_data.get('id'),
+        user1_id=match_data.get('user1_id'),
+        user2_id=match_data.get('user2_id'),
+        match_status=match_data.get('match_status', 'active'),  # По умолчанию 'active'
+        created_at=match_data.get('created_at'),
+        updated_at=match_data.get('updated_at')
     )

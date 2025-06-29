@@ -26,6 +26,17 @@ def check_match_exists(user1_id: int, user2_id: int) -> Optional[Dict[str, Any]]
     return db.fetch_one(query, (user1_id, user2_id, user2_id, user1_id))
 
 
+def get_match_by_users(user1_id: int, user2_id: int) -> Optional[Dict[str, Any]]:
+    """Получить матч между двумя пользователями"""
+    # Проверяем в обе стороны, так как пользователи могут быть в любом порядке
+    query = """
+        SELECT * FROM matches 
+        WHERE (user1_id = %s AND user2_id = %s) 
+            OR (user1_id = %s AND user2_id = %s)
+    """
+    return db.fetch_one(query, (user1_id, user2_id, user2_id, user1_id))
+
+
 def create_match(match: Matches) -> int:
     """Создать новый матч между пользователями"""
     # Проверяем, существует ли уже матч между этими пользователями

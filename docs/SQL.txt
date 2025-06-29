@@ -10,8 +10,8 @@ CREATE TABLE users (
 CREATE TABLE user_sessions (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
-  fingerprint_hash VARCHAR(64) NOT NULL,
-  jwt_token_hash VARCHAR(64) UNIQUE NOT NULL,
+  fingerprint_hash VARCHAR(255) NOT NULL,
+  jwt_token_hash VARCHAR(255) UNIQUE NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   ip_address VARCHAR(45) NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,

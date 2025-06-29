@@ -1,8 +1,9 @@
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
-from src.repository import user_sessions_repository
-from src.database.models import UserSessions
+from src.repository import user_sessions_repository, user_repository
+from src.database.models import UserSessions, Users
+from src.services.user_services import create_user
 from src.utils.custom_logging import get_logger
 
 log = get_logger(__name__)
@@ -56,6 +57,35 @@ def get_sessions_by_user(user_id: int) -> List[UserSessions]:
     return [UserSessions(**session) for session in sessions_data]
 
 
+def get_or_create_user(fingerprint_hash: str) -> Users:
+    """Получить существующего пользователя или создать нового по отпечатку"""
+    # Попробуем найти пользователя по отпечатку через активные сессии
+    sessions_data = user_sessions_repository.get_sessions_by_fingerprint(fingerprint_hash)
+    
+    if sessions_data:
+        # Берем последнюю активную сессию
+        for session_data in sessions_data:
+            user_data = user_repository.get_user_by_id(session_data.get('user_id'))
+            if user_data:
+                # Приводим поля к формату Pydantic
+                return Users(
+                    id=user_data.get('id'),                    # alias для ID
+                    email=user_data.get('email'),              # alias для Email
+                    password=user_data.get('password'),        # alias для Password
+                    first_name=user_data.get('first_name'),    # alias для FirstName
+                    last_activity=user_data.get('last_activity'), # alias для LastActivity
+                    created_at=user_data.get('created_at')     # alias для CreatedAt
+                )
+    
+    # Создаем нового пользователя с временными данными
+    import uuid
+    temp_email = f"temp_{uuid.uuid4().hex[:8]}@temp.local"
+    temp_password = uuid.uuid4().hex
+    temp_name = f"User_{uuid.uuid4().hex[:6]}"
+    
+    return create_user(temp_email, temp_password, temp_name)
+
+
 def create_session(
     user_id: int,
     fingerprint_hash: str,
@@ -67,14 +97,15 @@ def create_session(
     if user_sessions_repository.get_session_by_token_hash(jwt_token_hash):
         raise SessionValidationError('Session with this token hash already exists')
 
+    # Исправлено: используем строчные буквы
     session = UserSessions(
-        UserID=user_id,
-        FingerprintHash=fingerprint_hash,
-        JwtTokenHash=jwt_token_hash,
-        ExpiresAt=expires_at,
-        IPAddress=ip_address,
-        IsActive=True,
-        CreatedAt=datetime.now()
+        user_id=user_id,
+        fingerprint_hash=fingerprint_hash,
+        jwt_token_hash=jwt_token_hash,
+        expires_at=expires_at,
+        ip_address=ip_address,
+        is_active=1,
+        created_at=datetime.now()
     )
 
     session_id = user_sessions_repository.create_session(session)
@@ -83,7 +114,7 @@ def create_session(
 
 def update_session(session_id: int, updates: Dict[str, Any]) -> UserSessions:
     """Обновить данные сессии"""
-    existing_session = get_session_by_id(session_id)
+    get_session_by_id(session_id)
     
     # Подготовка данных для обновления
     update_data = {}
