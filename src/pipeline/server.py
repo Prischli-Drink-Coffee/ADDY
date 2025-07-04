@@ -1435,12 +1435,12 @@ async def create_user_profile(
 ):
     """Создать новый профиль пользователя"""
     profile_data = {
-        'Age': age,
-        'Gender': gender,
-        'Interests': interests,
-        'Bio': bio,
-        'ProfilePhotoUrl': profile_photo_url,
-        'Location': location
+        'age': age,
+        'gender': gender,
+        'interests': interests,
+        'bio': bio,
+        'profile_photo_url': profile_photo_url,
+        'location': location
     }
     
     return profile_details_services.create_profile(user_id, profile_data)
@@ -1569,17 +1569,17 @@ async def update_or_create_user_profile(
     updates = {}
     
     if age is not None:
-        updates['Age'] = age
+        updates['age'] = age
     if gender is not None:
-        updates['Gender'] = gender
+        updates['gender'] = gender
     if interests is not None:
-        updates['Interests'] = interests
+        updates['interests'] = interests
     if bio is not None:
-        updates['Bio'] = bio
+        updates['bio'] = bio
     if profile_photo_url is not None:
-        updates['ProfilePhotoUrl'] = profile_photo_url
+        updates['profile_photo_url'] = profile_photo_url
     if location is not None:
-        updates['Location'] = location
+        updates['location'] = location
     
     if not updates:
         raise HTTPException(
@@ -1597,7 +1597,7 @@ async def update_profile_photo(
     profile_photo_url: str = Form(...)
 ):
     """Обновить фотографию профиля"""
-    return profile_details_services.update_profile(profile_id, {'ProfilePhotoUrl': profile_photo_url})
+    return profile_details_services.update_profile(profile_id, {'profile_photo_url': profile_photo_url})
 
 @app_server.patch("/profiles/{profile_id}/bio", 
                   response_model=ProfileDetails, 
@@ -1607,7 +1607,7 @@ async def update_profile_bio(
     bio: str = Form(...)
 ):
     """Обновить описание профиля"""
-    return profile_details_services.update_profile(profile_id, {'Bio': bio})
+    return profile_details_services.update_profile(profile_id, {'bio': bio})
 
 @app_server.patch("/profiles/{profile_id}/interests", 
                   response_model=ProfileDetails, 
@@ -1617,7 +1617,7 @@ async def update_profile_interests(
     interests: str = Form(..., description="Интересы через запятую")
 ):
     """Обновить интересы профиля"""
-    return profile_details_services.update_profile(profile_id, {'Interests': interests})
+    return profile_details_services.update_profile(profile_id, {'interests': interests})
 
 @app_server.patch("/profiles/{profile_id}/location", 
                   response_model=ProfileDetails, 
@@ -1627,7 +1627,7 @@ async def update_profile_location(
     location: str = Form(...)
 ):
     """Обновить местоположение профиля"""
-    return profile_details_services.update_profile(profile_id, {'Location': location})
+    return profile_details_services.update_profile(profile_id, {'location': location})
 
 @app_server.delete("/profiles/{profile_id}", 
                    response_model=Dict[str, str],

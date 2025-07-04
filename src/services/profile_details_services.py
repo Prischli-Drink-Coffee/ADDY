@@ -83,17 +83,18 @@ def update_profile(profile_id: int, updates: Dict[str, Any]) -> ProfileDetails:
     existing = get_profile_by_id(profile_id)
     
     # Валидация обновлений
-    if 'Age' in updates and updates['Age'] is not None:
-        if not (18 <= updates['Age'] <= 120):
+    age_field = 'age' if 'age' in updates else 'Age' if 'Age' in updates else None
+    if age_field and updates[age_field] is not None:
+        if not (18 <= updates[age_field] <= 120):
             raise ProfileValidationError("Age must be between 18 and 120")
     
     update_data = {
-        'age': updates.get('Age'),
-        'gender': updates.get('Gender'),
-        'interests': updates.get('Interests'),
-        'bio': updates.get('Bio'),
-        'profile_photo_url': updates.get('ProfilePhotoUrl'),
-        'location': updates.get('Location')
+        'age': updates.get('age') or updates.get('Age'),
+        'gender': updates.get('gender') or updates.get('Gender'),
+        'interests': updates.get('interests') or updates.get('Interests'),
+        'bio': updates.get('bio') or updates.get('Bio'),
+        'profile_photo_url': updates.get('profile_photo_url') or updates.get('ProfilePhotoUrl'),
+        'location': updates.get('location') or updates.get('Location')
     }
     
     # Удаляем None значения
@@ -109,7 +110,7 @@ def update_user_profile(user_id: int, updates: Dict[str, Any]) -> ProfileDetails
     """Обновить профиль по ID пользователя"""
     try:
         profile = get_profile_by_user_id(user_id)
-        return update_profile(profile.ID, updates)
+        return update_profile(profile.id, updates)
     except ProfileNotFoundError:
         # Если профиля нет - создаем новый
         return create_profile(user_id, updates)
