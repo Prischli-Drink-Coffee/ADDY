@@ -39,193 +39,150 @@ class Users(BaseModel):
     """
     Модель пользователей приложения знакомств
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    Email: StrictStr = Field(..., 
-                            alias="email", 
+    id: Optional[int] = Field(None, 
+                             examples=[1])
+    email: StrictStr = Field(..., 
                             examples=["user@example.com"])
-    Password: StrictStr = Field(..., 
-                               alias="password", 
+    password: StrictStr = Field(..., 
                                examples=["hashed_password_string"])
-    FirstName: StrictStr = Field(..., 
-                                alias="first_name", 
-                                examples=["Александр"])
-    LastActivity: datetime = Field(..., 
-                                  alias="last_activity", 
-                                  examples=[f"{datetime.now()}"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    first_name: StrictStr = Field(..., 
+                                 examples=["Александр"])
+    last_activity: datetime = Field(..., 
+                                   examples=[f"{datetime.now()}"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class UserSessions(BaseModel):
     """
     Модель сессий пользователей
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    UserID: StrictInt = Field(..., 
-                             alias="user_id", 
+    id: Optional[int] = Field(None, 
                              examples=[1])
-    FingerprintHash: StrictStr = Field(..., 
-                                      alias="fingerprint_hash", 
-                                      examples=["a1b2c3d4e5f6789012345678901234567890abcdef"])
-    JwtTokenHash: StrictStr = Field(..., 
-                                   alias="jwt_token_hash", 
-                                   examples=["a1b2c3d4e5f6789012345678901234567890abcdef"])
-    ExpiresAt: datetime = Field(..., 
-                               alias="expires_at", 
-                               examples=[f"{datetime.now()}"])
-    IPAddress: Optional[StrictStr] = Field(None, 
-                                          alias="ip_address", 
-                                          examples=["192.168.1.1"])
-    IsActive: StrictInt = Field(default=1, 
-                                alias="is_active", 
+    user_id: StrictInt = Field(..., 
+                              examples=[1])
+    fingerprint_hash: StrictStr = Field(..., 
+                                       examples=["a1b2c3d4e5f6789012345678901234567890abcdef"])
+    jwt_token_hash: StrictStr = Field(..., 
+                                     examples=["a1b2c3d4e5f6789012345678901234567890abcdef"])
+    expires_at: datetime = Field(..., 
+                                examples=[f"{datetime.now()}"])
+    ip_address: Optional[StrictStr] = Field(None, 
+                                           examples=["192.168.1.1"])
+    is_active: StrictInt = Field(default=1, 
                                 examples=[1])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class ProfileDetails(BaseModel):
     """
     Модель деталей профиля пользователя
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    UserID: StrictInt = Field(..., 
-                             alias="user_id", 
+    id: Optional[int] = Field(None, 
                              examples=[1])
-    Age: Optional[StrictInt] = Field(None, 
-                                    alias="age", 
-                                    examples=[25])
-    Gender: Optional[StrictStr] = Field(None, 
-                                       alias="gender", 
-                                       examples=["мужской"])
-    Interests: Optional[StrictStr] = Field(None, 
-                                         alias="interests", 
+    user_id: StrictInt = Field(..., 
+                              examples=[1])
+    age: Optional[StrictInt] = Field(None, 
+                                   examples=[25])
+    gender: Optional[StrictStr] = Field(None, 
+                                      examples=["мужской"])
+    interests: Optional[StrictStr] = Field(None, 
                                          examples=["музыка, спорт, путешествия"])
-    Bio: Optional[StrictStr] = Field(None, 
-                                    alias="bio", 
-                                    examples=["Увлекаюсь горными походами и фотографией"])
-    ProfilePhotoUrl: Optional[StrictStr] = Field(None, 
-                                               alias="profile_photo_url", 
-                                               examples=["https://example.com/photos/user1.jpg"])
-    Location: Optional[StrictStr] = Field(None, 
-                                         alias="location", 
-                                         examples=["Москва"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
-    UpdatedAt: Optional[datetime] = Field(None, 
-                                        alias="updated_at", 
-                                        examples=[f"{datetime.now()}"])
+    bio: Optional[StrictStr] = Field(None, 
+                                   examples=["Увлекаюсь горными походами и фотографией"])
+    profile_photo_url: Optional[StrictStr] = Field(None, 
+                                                 examples=["https://example.com/photos/user1.jpg"])
+    location: Optional[StrictStr] = Field(None, 
+                                        examples=["Москва"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
+    updated_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class UserLikes(BaseModel):
     """
     Модель лайков между пользователями
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    FromUserID: StrictInt = Field(..., 
-                                 alias="from_user_id", 
-                                 examples=[1])
-    ToUserID: StrictInt = Field(..., 
-                               alias="to_user_id", 
-                               examples=[2])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    id: Optional[int] = Field(None, 
+                             examples=[1])
+    from_user_id: StrictInt = Field(..., 
+                                   examples=[1])
+    to_user_id: StrictInt = Field(..., 
+                                 examples=[2])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class Matches(BaseModel):
     """
     Модель совпадений (взаимных лайков) между пользователями
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    User1ID: StrictInt = Field(..., 
-                              alias="user1_id", 
-                              examples=[1])
-    User2ID: StrictInt = Field(..., 
-                              alias="user2_id", 
-                              examples=[2])
-    MatchStatus: MatchStatusEnum = Field(default=MatchStatusEnum.ACTIVE, 
-                                       alias="match_status", 
-                                       examples=["active"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
-    UpdatedAt: Optional[datetime] = Field(None, 
-                                        alias="updated_at", 
-                                        examples=[f"{datetime.now()}"])
+    id: Optional[int] = Field(None, 
+                             examples=[1])
+    user1_id: StrictInt = Field(..., 
+                               examples=[1])
+    user2_id: StrictInt = Field(..., 
+                               examples=[2])
+    match_status: MatchStatusEnum = Field(default=MatchStatusEnum.ACTIVE, 
+                                        examples=["active"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
+    updated_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class ChatConversations(BaseModel):
     """
     Модель чат-диалогов
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    MatchID: StrictInt = Field(..., 
-                              alias="match_id", 
-                              examples=[1])
-    LastMessageAt: Optional[datetime] = Field(None, 
-                                            alias="last_message_at", 
-                                            examples=[f"{datetime.now()}"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    id: Optional[int] = Field(None, 
+                             examples=[1])
+    match_id: StrictInt = Field(..., 
+                               examples=[1])
+    last_message_at: Optional[datetime] = Field(None, 
+                                               examples=[f"{datetime.now()}"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class ChatMessages(BaseModel):
     """
     Модель сообщений в чате
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    ConversationID: StrictInt = Field(..., 
-                                     alias="conversation_id", 
-                                     examples=[1])
-    SenderID: StrictInt = Field(..., 
-                               alias="sender_id", 
-                               examples=[1])
-    MessageText: StrictStr = Field(..., 
-                                  alias="message_text", 
-                                  examples=["Привет! Как дела?"])
-    IsRead: StrictBool = Field(default=False, 
-                              alias="is_read", 
-                              examples=[False])
-    MessageType: MessageTypeEnum = Field(default=MessageTypeEnum.USER, 
-                                       alias="message_type", 
-                                       examples=["user"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    id: Optional[int] = Field(None, 
+                             examples=[1])
+    conversation_id: StrictInt = Field(..., 
+                                      examples=[1])
+    sender_id: StrictInt = Field(..., 
+                                examples=[1])
+    message_text: StrictStr = Field(..., 
+                                   examples=["Привет! Как дела?"])
+    is_read: StrictBool = Field(default=False, 
+                               examples=[False])
+    message_type: MessageTypeEnum = Field(default=MessageTypeEnum.USER, 
+                                         examples=["user"])
+    created_at: Optional[datetime] = Field(None, 
+                                         examples=[f"{datetime.now()}"])
 
 
 class UserAgents(BaseModel):
     """
     Модель агентов пользователей
     """
-    ID: Optional[int] = Field(None, 
-                             alias="id")
-    UserID: StrictInt = Field(..., 
-                             alias="user_id", 
+    id: Optional[int] = Field(None, 
                              examples=[1])
-    PersonalityData: Dict[str, Any] = Field(..., 
-                                         alias="personality_data", 
-                                         examples=[{"communication_style": "friendly", "response_patterns": ["often asks questions", "uses emojis"]}])
-    LearningStatus: LearningStatusEnum = Field(default=LearningStatusEnum.LEARNING, 
-                                             alias="learning_status", 
-                                             examples=["learning"])
-    LastUpdatedAt: datetime = Field(..., 
-                                   alias="last_updated_at", 
-                                   examples=[f"{datetime.now()}"])
-    CreatedAt: Optional[datetime] = Field(None, 
-                                        alias="created_at", 
-                                        examples=[f"{datetime.now()}"])
+    user_id: StrictInt = Field(..., 
+                              examples=[1])
+    personality_data: Dict[str, Any] = Field(..., 
+                                           examples=[{"communication_style": "friendly", "response_patterns": ["often asks questions", "uses emojis"]}])
+    learning_status: LearningStatusEnum = Field(default=LearningStatusEnum.LEARNING, 
+                                              examples=["learning"])
+    last_updated_at: datetime = Field(..., 
+                                     examples=[f"{datetime.now()}"])
+    created_at: Optional[datetime] = Field(None, 
+                                          examples=[f"{datetime.now()}"])
 
 
 class AgentLearningData(BaseModel):

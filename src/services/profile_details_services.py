@@ -52,7 +52,7 @@ def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails
     # Проверяем, не существует ли уже профиль для этого пользователя
     try:
         existing = get_profile_by_user_id(user_id)
-        raise ProfileValidationError(f"Profile already exists for user {user_id} (ID: {existing.ID})")
+        raise ProfileValidationError(f"Profile already exists for user {user_id} (ID: {existing.id})")
     except ProfileNotFoundError:
         pass
     
@@ -61,17 +61,17 @@ def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails
     if age is not None and not (18 <= age <= 120):
         raise ProfileValidationError("Age must be between 18 and 120")
     
-    # Создаем объект ProfileDetails с заглавными буквами
+    # Создаем объект ProfileDetails
     profile = ProfileDetails(
-        UserID=user_id,
-        Age=profile_data.get('age'),
-        Gender=profile_data.get('gender'),
-        Interests=profile_data.get('interests'),
-        Bio=profile_data.get('bio'),
-        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
-        Location=profile_data.get('location'),
-        CreatedAt=datetime.now(),
-        UpdatedAt=datetime.now()
+        user_id=user_id,
+        age=profile_data.get('age'),
+        gender=profile_data.get('gender'),
+        interests=profile_data.get('interests'),
+        bio=profile_data.get('bio'),
+        profile_photo_url=profile_data.get('profile_photo_url'),
+        location=profile_data.get('location'),
+        created_at=datetime.now(),
+        updated_at=datetime.now()
     )
     
     profile_id = profile_details_repository.create_profile(profile)
@@ -203,14 +203,14 @@ def get_profile_recommendations(user_id: int, limit: int = 10) -> List[Dict[str,
 def _convert_db_profile(profile_data: Dict[str, Any]) -> ProfileDetails:
     """Конвертировать данные из БД в Pydantic модель"""
     return ProfileDetails(
-        ID=profile_data.get('id'),
-        UserID=profile_data.get('user_id'),
-        Age=profile_data.get('age'),
-        Gender=profile_data.get('gender'),
-        Interests=profile_data.get('interests'),
-        Bio=profile_data.get('bio'),
-        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
-        Location=profile_data.get('location'),
-        CreatedAt=profile_data.get('created_at'),
-        UpdatedAt=profile_data.get('updated_at')
+        id=profile_data.get('id'),
+        user_id=profile_data.get('user_id'),
+        age=profile_data.get('age'),
+        gender=profile_data.get('gender'),
+        interests=profile_data.get('interests'),
+        bio=profile_data.get('bio'),
+        profile_photo_url=profile_data.get('profile_photo_url'),
+        location=profile_data.get('location'),
+        created_at=profile_data.get('created_at'),
+        updated_at=profile_data.get('updated_at')
     )

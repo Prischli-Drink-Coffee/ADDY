@@ -50,7 +50,6 @@ def get_agent_by_user_id(user_id: int) -> UserAgents:
 
 def create_agent(user_id: int, personality_data: Dict[str, Any]) -> UserAgents:
     """Создать нового агента для пользователя"""
-    # Исправлено: используем строчные буквы
     agent = UserAgents(
         user_id=user_id,
         personality_data=personality_data,
@@ -70,15 +69,15 @@ def update_agent(agent_id: int, updates: Dict[str, Any]) -> UserAgents:
     # Подготовка данных для обновления
     update_data = {}
     
-    if 'PersonalityData' in updates:
-        if not isinstance(updates['PersonalityData'], dict):
+    if 'personality_data' in updates:
+        if not isinstance(updates['personality_data'], dict):
             raise AgentValidationError("Personality data must be a dictionary")
-        update_data['personality_data'] = updates['PersonalityData']
+        update_data['personality_data'] = updates['personality_data']
     
-    if 'LearningStatus' in updates:
-        if updates['LearningStatus'] not in LearningStatusEnum.__members__.values():
+    if 'learning_status' in updates:
+        if updates['learning_status'] not in LearningStatusEnum.__members__.values():
             raise AgentValidationError(f"Invalid learning status. Must be one of: {list(LearningStatusEnum.__members__.values())}")
-        update_data['learning_status'] = updates['LearningStatus']
+        update_data['learning_status'] = updates['learning_status']
     
     if not update_data:
         raise AgentValidationError("No valid fields to update")
@@ -92,12 +91,12 @@ def update_agent(agent_id: int, updates: Dict[str, Any]) -> UserAgents:
 
 def update_agent_status(agent_id: int, status: LearningStatusEnum) -> UserAgents:
     """Обновить статус обучения агента"""
-    return update_agent(agent_id, {'LearningStatus': status})
+    return update_agent(agent_id, {'learning_status': status})
 
 
 def update_agent_personality(agent_id: int, personality_data: Dict[str, Any]) -> UserAgents:
     """Обновить данные о личности агента"""
-    return update_agent(agent_id, {'PersonalityData': personality_data})
+    return update_agent(agent_id, {'personality_data': personality_data})
 
 
 def delete_agent(agent_id: int) -> Dict[str, str]:
@@ -110,7 +109,7 @@ def delete_agent(agent_id: int) -> Dict[str, str]:
 def delete_user_agent(user_id: int) -> Dict[str, str]:
     """Удалить агента по ID пользователя"""
     agent = get_agent_by_user_id(user_id)
-    return delete_agent(agent.ID)
+    return delete_agent(agent.id)
 
 
 def get_ready_agents() -> List[UserAgents]:
@@ -141,7 +140,7 @@ def find_similar_agents(agent_id: int, threshold: float = 0.5, limit: int = 10) 
     try:
         agent = get_agent_by_id(agent_id)
         return user_agents_repository.find_similar_agents(
-            agent.PersonalityData,
+            agent_id,
             threshold,
             limit
         )
@@ -157,7 +156,7 @@ def train_agent(agent_id: int, training_data: Dict[str, Any]) -> UserAgents:
     # В реальном приложении это может включать вызов ML модели
     
     # Обновляем данные личности (упрощенный пример)
-    updated_personality = {**agent.PersonalityData, **training_data}
+    updated_personality = {**agent.personality_data, **training_data}
     
     return update_agent_personality(agent_id, updated_personality)
 
@@ -174,8 +173,8 @@ def reset_agent_learning(agent_id: int) -> UserAgents:
     }
     
     return update_agent(agent_id, {
-        'PersonalityData': base_personality,
-        'LearningStatus': LearningStatusEnum.LEARNING
+        'personality_data': base_personality,
+        'learning_status': LearningStatusEnum.LEARNING
     })
 
 
