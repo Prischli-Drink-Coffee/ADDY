@@ -26,13 +26,13 @@ def get_agent_by_user_id(user_id: int) -> Optional[Dict[str, Any]]:
 def create_agent(agent: UserAgents) -> int:
     """Создать нового агента"""
     # Проверяем, не существует ли уже агент для этого пользователя
-    existing = get_agent_by_user_id(agent.UserID)
+    existing = get_agent_by_user_id(agent.user_id)
     if existing:
         # Если агент уже существует, возвращаем его ID
         return existing['id']
     
     # Сериализуем JSON данные о личности
-    personality_data = json.dumps(agent.PersonalityData)
+    personality_data = json.dumps(agent.personality_data)
     
     query = """
         INSERT INTO user_agents 
@@ -40,10 +40,10 @@ def create_agent(agent: UserAgents) -> int:
         VALUES (%s, %s, %s, %s)
     """
     params = (
-        agent.UserID,
+        agent.user_id,
         personality_data,
-        agent.LearningStatus,
-        agent.LastUpdatedAt or datetime.utcnow()
+        agent.learning_status,
+        agent.last_updated_at or datetime.utcnow()
     )
     cursor = db.execute_query(query, params)
     return cursor.lastrowid

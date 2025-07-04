@@ -40,7 +40,7 @@ def get_match_by_users(user1_id: int, user2_id: int) -> Optional[Dict[str, Any]]
 def create_match(match: Matches) -> int:
     """Создать новый матч между пользователями"""
     # Проверяем, существует ли уже матч между этими пользователями
-    existing = check_match_exists(match.User1ID, match.User2ID)
+    existing = check_match_exists(match.user1_id, match.user2_id)
     if existing:
         # Если матч уже существует и не активен, можем его активировать
         if existing['match_status'] != 'active':
@@ -53,9 +53,9 @@ def create_match(match: Matches) -> int:
         VALUES (%s, %s, %s)
     """
     params = (
-        match.User1ID,
-        match.User2ID,
-        match.MatchStatus
+        match.user1_id,
+        match.user2_id,
+        match.match_status
     )
     cursor = db.execute_query(query, params)
     return cursor.lastrowid

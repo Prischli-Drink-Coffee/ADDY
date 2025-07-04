@@ -4,6 +4,11 @@ from fastapi import HTTPException, status
 from src.repository import profile_details_repository
 from src.database.models import ProfileDetails
 from src.utils.custom_logging import get_logger
+from src.utils.validation import (
+    validate_age, validate_gender, validate_bio, validate_url,
+    validate_location, validate_interests, sanitize_input_dict,
+    ValidationError
+)
 
 log = get_logger(__name__)
 
@@ -49,29 +54,43 @@ def get_profile_by_user_id(user_id: int) -> ProfileDetails:
 
 def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails:
     """Создать новый профиль пользователя"""
+    # Validate user_id
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ProfileValidationError("Invalid user_id")
+    
     # Проверяем, не существует ли уже профиль для этого пользователя
     try:
         existing = get_profile_by_user_id(user_id)
-        raise ProfileValidationError(f"Profile already exists for user {user_id} (ID: {existing.ID})")
+        raise ProfileValidationError(f"Profile already exists for user {user_id} (ID: {existing.id})")
     except ProfileNotFoundError:
         pass
     
-    # Валидация данных
-    age = profile_data.get('age')
-    if age is not None and not (18 <= age <= 120):
-        raise ProfileValidationError("Age must be between 18 and 120")
+    # Sanitize input data
+    profile_data = sanitize_input_dict(profile_data)
     
-    # Создаем объект ProfileDetails с заглавными буквами
+    # Validate and sanitize all fields
+    try:
+        validated_data = {
+            'age': validate_age(profile_data.get('age')),
+            'gender': validate_gender(profile_data.get('gender')),
+            'interests': validate_interests(profile_data.get('interests')),
+            'bio': validate_bio(profile_data.get('bio')),
+            'profile_photo_url': validate_url(profile_data.get('profile_photo_url'), 'Profile photo URL'),
+            'location': validate_location(profile_data.get('location'))
+        }
+        
+        # Remove None values
+        validated_data = {k: v for k, v in validated_data.items() if v is not None}
+        
+    except ValidationError as e:
+        raise ProfileValidationError(str(e))
+    
+    # Создаем объект ProfileDetails
     profile = ProfileDetails(
-        UserID=user_id,
-        Age=profile_data.get('age'),
-        Gender=profile_data.get('gender'),
-        Interests=profile_data.get('interests'),
-        Bio=profile_data.get('bio'),
-        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
-        Location=profile_data.get('location'),
-        CreatedAt=datetime.now(),
-        UpdatedAt=datetime.now()
+        user_id=user_id,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        **validated_data
     )
     
     profile_id = profile_details_repository.create_profile(profile)
@@ -83,17 +102,18 @@ def update_profile(profile_id: int, updates: Dict[str, Any]) -> ProfileDetails:
     existing = get_profile_by_id(profile_id)
     
     # Валидация обновлений
-    if 'Age' in updates and updates['Age'] is not None:
-        if not (18 <= updates['Age'] <= 120):
+    age_field = 'age' if 'age' in updates else 'Age' if 'Age' in updates else None
+    if age_field and updates[age_field] is not None:
+        if not (18 <= updates[age_field] <= 120):
             raise ProfileValidationError("Age must be between 18 and 120")
     
     update_data = {
-        'age': updates.get('Age'),
-        'gender': updates.get('Gender'),
-        'interests': updates.get('Interests'),
-        'bio': updates.get('Bio'),
-        'profile_photo_url': updates.get('ProfilePhotoUrl'),
-        'location': updates.get('Location')
+        'age': updates.get('age') or updates.get('Age'),
+        'gender': updates.get('gender') or updates.get('Gender'),
+        'interests': updates.get('interests') or updates.get('Interests'),
+        'bio': updates.get('bio') or updates.get('Bio'),
+        'profile_photo_url': updates.get('profile_photo_url') or updates.get('ProfilePhotoUrl'),
+        'location': updates.get('location') or updates.get('Location')
     }
     
     # Удаляем None значения
@@ -109,7 +129,7 @@ def update_user_profile(user_id: int, updates: Dict[str, Any]) -> ProfileDetails
     """Обновить профиль по ID пользователя"""
     try:
         profile = get_profile_by_user_id(user_id)
-        return update_profile(profile.ID, updates)
+        return update_profile(profile.id, updates)
     except ProfileNotFoundError:
         # Если профиля нет - создаем новый
         return create_profile(user_id, updates)
@@ -203,14 +223,14 @@ def get_profile_recommendations(user_id: int, limit: int = 10) -> List[Dict[str,
 def _convert_db_profile(profile_data: Dict[str, Any]) -> ProfileDetails:
     """Конвертировать данные из БД в Pydantic модель"""
     return ProfileDetails(
-        ID=profile_data.get('id'),
-        UserID=profile_data.get('user_id'),
-        Age=profile_data.get('age'),
-        Gender=profile_data.get('gender'),
-        Interests=profile_data.get('interests'),
-        Bio=profile_data.get('bio'),
-        ProfilePhotoUrl=profile_data.get('profile_photo_url'),
-        Location=profile_data.get('location'),
-        CreatedAt=profile_data.get('created_at'),
-        UpdatedAt=profile_data.get('updated_at')
+        id=profile_data.get('id'),
+        user_id=profile_data.get('user_id'),
+        age=profile_data.get('age'),
+        gender=profile_data.get('gender'),
+        interests=profile_data.get('interests'),
+        bio=profile_data.get('bio'),
+        profile_photo_url=profile_data.get('profile_photo_url'),
+        location=profile_data.get('location'),
+        created_at=profile_data.get('created_at'),
+        updated_at=profile_data.get('updated_at')
     )

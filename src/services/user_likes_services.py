@@ -160,8 +160,8 @@ def get_user_likes_stats(user_id: int) -> Dict[str, Any]:
 def _convert_db_like(like_data: Dict[str, Any]) -> UserLikes:
     """Конвертировать данные из БД в Pydantic модель"""
     return UserLikes(
-        ID=like_data['id'],
-        FromUserID=like_data['from_user_id'],
-        ToUserID=like_data['to_user_id'],
-        CreatedAt=like_data['created_at']
+        id=like_data['id'],
+        from_user_id=like_data['from_user_id'],
+        to_user_id=like_data['to_user_id'],
+        created_at=like_data['created_at']
     )
