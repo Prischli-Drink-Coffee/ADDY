@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from src.repository import user_agents_repository
 from src.database.models import UserAgents, LearningStatusEnum
 from src.utils.custom_logging import get_logger
+from src.utils.validation import validate_personality_data, ValidationError
 
 log = get_logger(__name__)
 
@@ -50,6 +51,15 @@ def get_agent_by_user_id(user_id: int) -> UserAgents:
 
 def create_agent(user_id: int, personality_data: Dict[str, Any]) -> UserAgents:
     """Создать нового агента для пользователя"""
+    # Validate input
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise AgentValidationError("Invalid user_id")
+    
+    try:
+        personality_data = validate_personality_data(personality_data)
+    except ValidationError as e:
+        raise AgentValidationError(str(e))
+    
     agent = UserAgents(
         user_id=user_id,
         personality_data=personality_data,
@@ -64,15 +74,21 @@ def create_agent(user_id: int, personality_data: Dict[str, Any]) -> UserAgents:
 
 def update_agent(agent_id: int, updates: Dict[str, Any]) -> UserAgents:
     """Обновить данные агента"""
+    # Validate agent_id
+    if not isinstance(agent_id, int) or agent_id <= 0:
+        raise AgentValidationError("Invalid agent_id")
+    
     agent = get_agent_by_id(agent_id)
     
     # Подготовка данных для обновления
     update_data = {}
     
     if 'personality_data' in updates:
-        if not isinstance(updates['personality_data'], dict):
-            raise AgentValidationError("Personality data must be a dictionary")
-        update_data['personality_data'] = updates['personality_data']
+        try:
+            personality_data = validate_personality_data(updates['personality_data'])
+            update_data['personality_data'] = personality_data
+        except ValidationError as e:
+            raise AgentValidationError(f"Invalid personality data: {str(e)}")
     
     if 'learning_status' in updates:
         if updates['learning_status'] not in LearningStatusEnum.__members__.values():

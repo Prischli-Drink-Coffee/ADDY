@@ -40,12 +40,12 @@ def create_session(session: UserSessions) -> int:
         VALUES (%s, %s, %s, %s, %s, %s)
     """
     params = (
-        session.UserID,
-        session.JwtTokenHash,
-        session.FingerprintHash,  # Новое поле
-        session.ExpiresAt,
-        session.IPAddress,
-        session.IsActive
+        session.user_id,
+        session.jwt_token_hash,
+        session.fingerprint_hash,
+        session.expires_at,
+        session.ip_address,
+        session.is_active
     )
     cursor = db.execute_query(query, params)
     return cursor.lastrowid

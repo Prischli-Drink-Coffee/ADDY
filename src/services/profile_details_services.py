@@ -4,6 +4,11 @@ from fastapi import HTTPException, status
 from src.repository import profile_details_repository
 from src.database.models import ProfileDetails
 from src.utils.custom_logging import get_logger
+from src.utils.validation import (
+    validate_age, validate_gender, validate_bio, validate_url,
+    validate_location, validate_interests, sanitize_input_dict,
+    ValidationError
+)
 
 log = get_logger(__name__)
 
@@ -49,6 +54,10 @@ def get_profile_by_user_id(user_id: int) -> ProfileDetails:
 
 def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails:
     """Создать новый профиль пользователя"""
+    # Validate user_id
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ProfileValidationError("Invalid user_id")
+    
     # Проверяем, не существует ли уже профиль для этого пользователя
     try:
         existing = get_profile_by_user_id(user_id)
@@ -56,22 +65,32 @@ def create_profile(user_id: int, profile_data: Dict[str, Any]) -> ProfileDetails
     except ProfileNotFoundError:
         pass
     
-    # Валидация данных
-    age = profile_data.get('age')
-    if age is not None and not (18 <= age <= 120):
-        raise ProfileValidationError("Age must be between 18 and 120")
+    # Sanitize input data
+    profile_data = sanitize_input_dict(profile_data)
+    
+    # Validate and sanitize all fields
+    try:
+        validated_data = {
+            'age': validate_age(profile_data.get('age')),
+            'gender': validate_gender(profile_data.get('gender')),
+            'interests': validate_interests(profile_data.get('interests')),
+            'bio': validate_bio(profile_data.get('bio')),
+            'profile_photo_url': validate_url(profile_data.get('profile_photo_url'), 'Profile photo URL'),
+            'location': validate_location(profile_data.get('location'))
+        }
+        
+        # Remove None values
+        validated_data = {k: v for k, v in validated_data.items() if v is not None}
+        
+    except ValidationError as e:
+        raise ProfileValidationError(str(e))
     
     # Создаем объект ProfileDetails
     profile = ProfileDetails(
         user_id=user_id,
-        age=profile_data.get('age'),
-        gender=profile_data.get('gender'),
-        interests=profile_data.get('interests'),
-        bio=profile_data.get('bio'),
-        profile_photo_url=profile_data.get('profile_photo_url'),
-        location=profile_data.get('location'),
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        **validated_data
     )
     
     profile_id = profile_details_repository.create_profile(profile)
