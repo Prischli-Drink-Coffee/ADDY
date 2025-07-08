@@ -25,7 +25,7 @@ def get_profile_by_user_id(user_id: int) -> Optional[Dict[str, Any]]:
 def create_profile(profile: ProfileDetails) -> int:
     """Создать новый профиль пользователя"""
     # Проверяем, существует ли уже профиль для этого пользователя
-    existing = get_profile_by_user_id(profile.UserID)
+    existing = get_profile_by_user_id(profile.user_id)
     if existing:
         # Профиль уже существует, возвращаем его ID
         return existing['id']
@@ -36,13 +36,13 @@ def create_profile(profile: ProfileDetails) -> int:
         VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     params = (
-        profile.UserID,
-        profile.Age,
-        profile.Gender,
-        profile.Interests,
-        profile.Bio,
-        profile.ProfilePhotoUrl,
-        profile.Location
+        profile.user_id,
+        profile.age,
+        profile.gender,
+        profile.interests,
+        profile.bio,
+        profile.profile_photo_url,
+        profile.location
     )
     cursor = db.execute_query(query, params)
     return cursor.lastrowid

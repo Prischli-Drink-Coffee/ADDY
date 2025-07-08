@@ -1000,11 +1000,11 @@ async def get_current_user_info(request: Request):
                 "session_id": user_data["session_id"],
                 "fingerprint_hash": user_data["fingerprint_hash"],
                 "user_info": {
-                    "id": user.ID,
-                    "is_active": user.IsActive,
-                    "total_sessions": user.TotalSessions,
-                    "last_active": user.LastActive.isoformat() if user.LastActive else None,
-                    "created_at": user.CreatedAt.isoformat()
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_activity": user.last_activity.isoformat() if user.last_activity else None,
+                    "created_at": user.created_at.isoformat() if user.created_at else None
                 }
             },
             "message": "Информация о пользователе получена"
@@ -1047,7 +1047,7 @@ async def validate_current_session(request: Request):
         user_data = session_manager.get_current_user_from_request(request)
         session = user_sessions_services.get_session_by_id(user_data["session_id"])
         
-        if not session or not session.IsActive:
+        if not session or not session.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Сессия недействительна или неактивна"
@@ -1059,8 +1059,8 @@ async def validate_current_session(request: Request):
                 "is_valid": True,
                 "user_id": user_data["user_id"],
                 "session_id": user_data["session_id"],
-                "session_expires_at": session.ExpiresAt.isoformat() if session.ExpiresAt else None,
-                "session_created_at": session.CreatedAt.isoformat()
+                "session_expires_at": session.expires_at.isoformat() if session.expires_at else None,
+                "session_created_at": session.created_at.isoformat() if session.created_at else None
             },
             "message": "Сессия действительна"
         }
@@ -1141,15 +1141,13 @@ async def get_session_info(request: Request):
         return {
             "success": True,
             "data": {
-                "session_id": session.ID,
-                "user_id": session.UserID,
-                "fingerprint_hash": session.FingerprintHash,
-                "ip_address": session.IPAddress,
-                "user_agent": session.UserAgent,
-                "is_active": session.IsActive,
-                "created_at": session.CreatedAt.isoformat(),
-                "expires_at": session.ExpiresAt.isoformat() if session.ExpiresAt else None,
-                "last_activity": session.LastActivity.isoformat() if session.LastActivity else None
+                "session_id": session.id,
+                "user_id": session.user_id,
+                "fingerprint_hash": session.fingerprint_hash,
+                "ip_address": session.ip_address,
+                "is_active": session.is_active,
+                "created_at": session.created_at.isoformat() if session.created_at else None,
+                "expires_at": session.expires_at.isoformat() if session.expires_at else None
             },
             "message": "Информация о сессии получена"
         }
@@ -1435,12 +1433,12 @@ async def create_user_profile(
 ):
     """Создать новый профиль пользователя"""
     profile_data = {
-        'Age': age,
-        'Gender': gender,
-        'Interests': interests,
-        'Bio': bio,
-        'ProfilePhotoUrl': profile_photo_url,
-        'Location': location
+        'age': age,
+        'gender': gender,
+        'interests': interests,
+        'bio': bio,
+        'profile_photo_url': profile_photo_url,
+        'location': location
     }
     
     return profile_details_services.create_profile(user_id, profile_data)
@@ -1569,17 +1567,17 @@ async def update_or_create_user_profile(
     updates = {}
     
     if age is not None:
-        updates['Age'] = age
+        updates['age'] = age
     if gender is not None:
-        updates['Gender'] = gender
+        updates['gender'] = gender
     if interests is not None:
-        updates['Interests'] = interests
+        updates['interests'] = interests
     if bio is not None:
-        updates['Bio'] = bio
+        updates['bio'] = bio
     if profile_photo_url is not None:
-        updates['ProfilePhotoUrl'] = profile_photo_url
+        updates['profile_photo_url'] = profile_photo_url
     if location is not None:
-        updates['Location'] = location
+        updates['location'] = location
     
     if not updates:
         raise HTTPException(
@@ -1597,7 +1595,7 @@ async def update_profile_photo(
     profile_photo_url: str = Form(...)
 ):
     """Обновить фотографию профиля"""
-    return profile_details_services.update_profile(profile_id, {'ProfilePhotoUrl': profile_photo_url})
+    return profile_details_services.update_profile(profile_id, {'profile_photo_url': profile_photo_url})
 
 @app_server.patch("/profiles/{profile_id}/bio", 
                   response_model=ProfileDetails, 
@@ -1607,7 +1605,7 @@ async def update_profile_bio(
     bio: str = Form(...)
 ):
     """Обновить описание профиля"""
-    return profile_details_services.update_profile(profile_id, {'Bio': bio})
+    return profile_details_services.update_profile(profile_id, {'bio': bio})
 
 @app_server.patch("/profiles/{profile_id}/interests", 
                   response_model=ProfileDetails, 
@@ -1617,7 +1615,7 @@ async def update_profile_interests(
     interests: str = Form(..., description="Интересы через запятую")
 ):
     """Обновить интересы профиля"""
-    return profile_details_services.update_profile(profile_id, {'Interests': interests})
+    return profile_details_services.update_profile(profile_id, {'interests': interests})
 
 @app_server.patch("/profiles/{profile_id}/location", 
                   response_model=ProfileDetails, 
@@ -1627,7 +1625,7 @@ async def update_profile_location(
     location: str = Form(...)
 ):
     """Обновить местоположение профиля"""
-    return profile_details_services.update_profile(profile_id, {'Location': location})
+    return profile_details_services.update_profile(profile_id, {'location': location})
 
 @app_server.delete("/profiles/{profile_id}", 
                    response_model=Dict[str, str],
@@ -2430,7 +2428,7 @@ async def update_user_email(
     """Обновить email пользователя"""
     # Проверяем, что email не занят другим пользователем
     existing_user = user_services.get_user_by_email(email)
-    if existing_user and existing_user.ID != user_id:
+    if existing_user and existing_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Пользователь с таким email уже существует"

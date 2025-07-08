@@ -168,7 +168,7 @@ def validate_session(token_hash: str) -> bool:
         return False
     
     session = UserSessions(**session_data)
-    return session.IsActive and session.ExpiresAt > datetime.now()
+    return session.is_active and session.expires_at > datetime.now()
 
 
 def extend_session(session_id: int, days: int = 30) -> UserSessions:
